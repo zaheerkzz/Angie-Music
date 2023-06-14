@@ -1,1 +1,955 @@
 
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "basic",
+  "title": "inventory",
+  "description": "Inventory Items",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "taxonomy": {
+        "$ref": "#/$defs/taxonomy"
+      },
+      "customer": {
+        "$ref": "#/$defs/customer"
+      },
+      "server": {
+        "$ref": "#/$defs/server"
+      },
+      "operating_system": {
+        "$ref": "#/$defs/operating_system"
+      },
+      "subsystem": {
+        "$ref": "#/$defs/subsystem"
+      }
+    },
+    "additionalProperties": true
+  },
+  "$defs": {
+    "customer": {
+      "type": "object",
+      "properties": {
+        "org_market": {
+          "description": "Organizational Market (kyndryl). Identifies the organizational markets in kyndryl which have Senior Executives assigned.",
+          "$comment": "the values used map to the shortDescription rather than the code, from ERDM ",
+          "enum": [
+            "ESP&PRT",
+            "USA",
+            "AUS&NZL",
+            "Strategic",
+            "India",
+            "Canada",
+            "France",
+            "Germany",
+            "UK&I",
+            "Italy",
+            "Japan"
+          ]
+        },
+        "strategic_market": {
+          "description": "Strategic Market (kyndryl). Identifies the detail under the Strategic Market in kyndryl.",
+          "$comment": "the values used map to the shortDescription rather than the code, from ERDM ",
+          "enum": [
+            "S. Korea",
+            "Singapore",
+            "MEA",
+            "CEE&EM",
+            "Chile",
+            "Argentina",
+            "Netherland",
+            "Austria",
+            "Colombia",
+            "Norway",
+            "BELUX",
+            "GCG",
+            "Sweden",
+            "ASEAN",
+            "Peru",
+            "Swiss",
+            "AUCA",
+            "Denmark",
+            "Brazil",
+            "Finland",
+            "Mexico"
+          ]
+        },
+        "customer_id": {
+          "description": "The BlueID for the customer account, of any representation. e.g. BAC, BGC, etc",
+          "$comment": "",
+          "type": "string",
+          "pattern": "^((BAC|BAM|BDC|BGU|BGC)([0-9]{7}))$"
+        },
+        "customer_name": {
+          "description": "The customer name on the BlueID id record.",
+          "$comment": "",
+          "type": "string",
+          "maxLength": 255
+        },
+        "contract_id": {
+          "description": "The BlueID for the customer contract, must be BAC",
+          "$comment": "",
+          "type": "string",
+          "pattern": "^((BAC|BAM)([0-9]{7}))$"
+        },
+        "contract_name": {
+          "description": "The customer name on the customer contract.",
+          "$comment": "",
+          "type": "string",
+          "maxLength": 255
+        },
+        "dpe_email": {
+          "description": "Email Address of Account DPE",
+          "dataType": "string",
+          "constraints": {
+            "required": true,
+            "unique": true,
+            "format": "email"
+          }
+        },
+        "dpe_name": {
+          "description": "Account DPE Name",
+          "dataType": "string",
+          "constraints": {
+            "required": true,
+            "pattern": "^[a-zA-Z\\s]*$",
+            "maxLength": 100
+          }
+        },
+        "account_using_name": {
+          "type": "string",
+          "maxLength": 255,
+          "comment": "customer_name",
+          "description": "The names of the accounts associated with the customer"
+        },
+        "account_using_identifier": {
+          "type": "string",
+          "maxLength": 255,
+          "comment": "customer_identifier",
+          "description": "The names of the accounts associated with the customer",
+          "items": {
+            "type": "string",
+            "uniqueItems": true
+          }
+        }
+      },
+      "required": [
+        "org_market",
+        "contract_id"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "org_market": {
+                "const": "Strategic"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "strategic_market"
+            ]
+          },
+          "else": {
+            "properties": {
+              "strategic_market": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "asset_management": {
+      "description": "Information required to support asset management processes",
+      "type": "object",
+      "properties": {}
+    },
+    "taxonomy": {
+      "description": "The classification of the item",
+      "$comment": "TODO: rework the taxonomy as a separate schema that enforces the allowable combinations",
+      "type": "object",
+      "properties": {
+        "domain": {
+          "description": "the top level (level 0) classification of the item",
+          "enum": [
+            "hardware",
+            "software"
+          ]
+        },
+        "category": {
+          "description": "the classification within the domain (level 1) if the item",
+          "enum": [
+            "server",
+            "storage",
+            "network",
+            "resiliency",
+            "compute",
+            "operating_system",
+            "subsystem"
+          ]
+        }
+      },
+      "required": [
+        "domain",
+        "category"
+      ]
+    },
+    "server": {
+      "description": "the classification within the category (level 2) of the item",
+      "$comment": "suggestion",
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "account": {
+          "$ref": "#/$defs/account"
+        },
+        "business_usage": {
+          "$ref": "#/$defs/business_usage"
+        },
+        "technial_specification": {
+          "$ref": "#/$defs/technial_specification"
+        }
+      },
+      "required": [
+        "identifier"
+      ]
+    },
+    "identifiers": {
+      "description": "Schema for describing Identifiers",
+      "type": "object",
+      "$comment": "",
+      "properties": {
+        "serial_number": {
+          "type": "string",
+          "description": "A unique identifier of the box assigned by vendor in order to distinguish that product from all others."
+        },
+        "hardware_label": {
+          "type": "string",
+          "description": "Permanent unique mark of the hardware box"
+        },
+        "mac_address": {
+          "type": "string",
+          "pattern": "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$",
+          "description": "A unique identifier assigned to a network interface controller/card (NIC) for use as a network address in communications within a network segment - in general 12-digit number"
+        },
+        "manufacturer": {
+          "type": "string",
+          "description": "A company name which produces the device"
+        },
+        "hardware_model": {
+          "type": "string",
+          "description": "Type and model combination of a hardware device"
+        },
+        "manufacturer_part_number": {
+          "type": "string",
+          "description": "A unique number that is issued by manufacturers to identify individual products"
+        },
+        "unspsc": {
+          "type": "string",
+          "pattern": "^\\d{8}$",
+          "description": "United Nations Standard Products and Services Code"
+        },
+        "user_id": {
+          "type": "string",
+          "description": "Last update Name and/or User ID who updated the asset"
+        }
+      },
+      "required": [
+        "serial_number",
+        "manufacturer",
+        "hardware_model",
+        "manufacturer_part_number"
+      ]
+    },
+    "account": {
+      "description": "Customer Account Details",
+      "type": "object",
+      "$comment": "",
+      "properties": {
+        "chip_id": {
+          "description": "The Chip_ID for the customer account. e.g. BAC, BGC etc.",
+          "type": "string",
+          "pattern": "^((BAC|BAM|BDC|BGU|BGC)([A-Za-z0-9]{7}))$",
+          "maxLength": 100
+        },
+        "asset_ownership": {
+          "description": "Asset Owner Name e.g. IBM, Kyndryl etc",
+          "enum": [
+            "Customer",
+            "Kyndryl Owns (Dedicated to Customer)",
+            "Kyndryl Owns (Shared/Pool)"
+          ]
+        }
+      },
+      "required": [
+        "chip_id"
+      ]
+    },
+    "business_usage": {
+      "description": "Hardware Business Usage",
+      "type": "object",
+      "$comment": "",
+      "properties": {
+        "hardware_purpose": {
+          "type": "string",
+          "description": "Purpose/usage of the Hardware"
+        },
+        "major_business_process": {
+          "type": "string",
+          "description": "main contribution/benefit of the box - from perspective who is the customer (internal or external; e. g. GACDW)"
+        },
+        "highest_security_classification": {
+          "type": "string",
+          "description": "The security classification of this server",
+          "enum": [
+            "Client Confidential",
+            "Kyndryl Confidential",
+            "Kyndryl internal"
+          ]
+        },
+        "is_virtual": {
+          "type": "boolean",
+          "description": "If Virtual flag = Y, it means it has a hypervisor running on this machine and it can spawn off multiple VMs (host VMs)"
+        },
+        "is_multi_tenant": {
+          "type": "boolean",
+          "description": "Indicate if the box is shared by more than one commercial customer"
+        },
+        "order_date": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date on which hardware box was Ordered "
+        },
+        "ship_date": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date on which hardware box was shipped by Vendor"
+        },
+        "delivery_date": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date on which hardware box was Delivered at Installation Center (or client location)"
+        },
+        "installation_date": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date on which Hardware box was installed"
+        }
+      },
+      "required": [
+        "hardware_purpose",
+        "virtual_flag",
+        "multi_tenant_flag",
+        "installation_date"
+      ]
+    },
+    "technial_specification": {
+      "description": "The technical specification of the device",
+      "type": "object",
+      "$comment": "",
+      "properties": {
+        "processor_chip_manufacturer": {
+          "type": "string",
+          "description": "Manufacturer of the Processor in the device"
+        },
+        "processor_chip_model": {
+          "type": "string",
+          "description": "Represents the manufacturer-assigned processor chip type - Ryzen, i7-12004; (question for business: using one vs. Multiple fields for 'Model'?)",
+          "comments": "Type and model combination of the processor chip in the box"
+        },
+        "number_of_processor_chips": {
+          "type": "number",
+          "description": "Physically available number of Processors"
+        },
+        "number_of_processor_cores_per_chip": {
+          "type": "number",
+          "description": "Based on physically available cores"
+        },
+        "number_of_free_processor_chips": {
+          "type": "number",
+          "description": "Amount not-enabled / not-activated, based on license"
+        },
+        "number_of_free_processor_cores": {
+          "type": "number",
+          "description": "Amount not-enabled / not-activated, based on license, or being broken"
+        },
+        "processor_speed": {
+          "type": "string",
+          "description": "Speed of the processor"
+        },
+        "processor_speed_unit": {
+          "type": "string",
+          "description": "Unit of the processor speed"
+        },
+        "primary_memory": {
+          "type": "string",
+          "description": "Maximum capacity of the Primary Memory in the box (e.g., 16 GB)"
+        },
+        "primary_memory_unit": {
+          "type": "string",
+          "description": "Unit of the Memory capacity"
+        },
+        "cache_memory": {
+          "type": "string",
+          "description": "Amount of Cache Memory"
+        },
+        "cache _memory_unit": {
+          "type": "string",
+          "description": "Unit of the Memory capacity"
+        },
+        "dasd_memory": {
+          "type": "string",
+          "description": "DASD Memory Capacity (Direct Access Storage Device)"
+        },
+        "dasd_memory_unit": {
+          "type": "string",
+          "description": "DASD Memory Capacity Units"
+        },
+        "tape_memory": {
+          "type": "number",
+          "description": "Tape Memory Capacity"
+        },
+        "tape_memory_unit": {
+          "type": "string",
+          "description": "Tape Memory Capacity Units"
+        },
+        "disk_internal_capacity": {
+          "type": "string",
+          "description": "Capacity / Size of internal disk (IDE, SATA, SSD)"
+        },
+        "disk_internal_capacity_unit": {
+          "type": "string",
+          "description": "Unit of the internal disk size"
+        },
+        "disk_external_capacity": {
+          "type": "string",
+          "description": "Capacity / Size of the connected External Disk Storage"
+        },
+        "disk_external_capacity_unit": {
+          "type": "string",
+          "description": "Unit of Size of the connected External Disk Storage"
+        },
+        "processor_power": {
+          "type": "string",
+          "description": "Magnitude of the Processing Power of the Processor used in the compute box"
+        },
+        "processor_power_unit": {
+          "type": "string",
+          "description": "Measurements of processor executes. MIPS  (Million Instructions Per Second) - to determine the speed and performance of a mainframe, RPERF (Relative Perfomance) - to approximate the expected difference in performance between two Power Systems servers, CPW (Commercial Processing Workload) -  is designed for business applications that have a significant amount of input/output.  a measurement of the amount of processing work a computer can perform in one hour. MSU (Million Service Units) - MSU ratings are used for Software Pricing charges."
+        }
+      },
+      "required": [
+        "processor_chip_manufacturer",
+        "processor_chip_model"
+      ]
+    },
+    "operating_system": {
+      "description": "the classification within the category (level 2) of the item",
+      "$comment": "suggestion",
+      "type": "object",
+      "properties": {
+        "software_type": {
+          "$ref": "#/$defs/software_type"
+        },
+        "business_usage": {
+          "$ref": "#/$defs/business_usage"
+        },
+        "contacts-responsibilities-roles": {
+          "$ref": "#/$defs/contacts-responsibilities-roles"
+        },
+        "compliance_and_security": {
+          "$ref": "#/$defs/compliance_and_security"
+        },
+        "identifier": {
+          "$ref": "#/$defs/identifier"
+        }
+      },
+      "required": [
+        "identifier",
+        "business_usage",
+        "compliance_and_security",
+        "software_type"
+      ]
+    },
+    "software_type": {
+      "type": "object",
+      "properties": {
+        "operating_system_provider": {
+          "description": "Common name of the Operating System Provider / Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_name": {
+          "description": "Common name of the Operating System software product as defined by the Provider/Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_version": {
+          "description": "Version of the Operating System as defined by the Provider/Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_release": {
+          "description": "Release of the Operating System as defined by the Provider/Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_modification": {
+          "description": "Modification of the Operating System as defined by the Provider/Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_service_pack": {
+          "description": "Service Pack of the Operating System as defined by the Provider/Manufacturer.",
+          "type": "string"
+        },
+        "operating_system_type": {
+          "description": "Type of the Operating System as defined by the Provider/Manufacturer.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operating_system_provider",
+        "operating_system_name",
+        "operating_system_version",
+        "operating_system_release",
+        "operating_system_modification",
+        "operating_system_service_pack",
+        "operating_system_type"
+      ]
+    },
+    "business_usage": {
+      "type": "object",
+      "properties": {
+        "is_capped_lpar": {
+          "type": "boolean",
+          "description": "Flag to indicate if this is a CAPPED LPAR, A capped partitions access to processor resources is limited to the amount of processor resources allocated when the partition was started (or changed through a dynamic LPAR, or DLPAR, operation). Applies only when the Shared processor value is Y. Shall contain value Y or N."
+        },
+        "lpar_processor_power": {
+          "type": "number",
+          "description": "Magnitude of the Processing Power of the Processor allocated to logical partition / operating system"
+        },
+        "lpar_processor_power_unit": {
+          "type": "string",
+          "description": "Unit used for Processing power, either of MIPS (Million Instructions Per Second), MSU (Million Service Units), RPERF (Relative Perfomance), CPW (Commercial Processing Workload)"
+        },
+        "is_virtual": {
+          "type": "boolean",
+          "description": "If Virtual flag = Y, it means it is a GUEST Operating system."
+        },
+        "num_processor_chips_associated_to_hostname": {
+          "type": "integer",
+          "description": "Number of processor count on a particular chip in OS."
+        },
+        "num_processor_cores_associated_to_hostname": {
+          "type": "integer",
+          "description": "Number of processor core count on a particular chip in OS."
+        },
+        "virtual_machine_power_state": {
+          "type": "boolean",
+          "description": "state of Virtual machine. If powered off or On"
+        },
+        "virtual_machine_num_processor_cores_per_socket": {
+          "type": "integer",
+          "description": "Processor cores assigned to Virtual machine"
+        },
+        "virtual_machine_num_processor_chip_sockets": {
+          "type": "integer",
+          "description": "Number of Processor chip sockets allocated on virtual machine."
+        },
+        "num_processor_chips_associated_to_lpar": {
+          "type": "integer",
+          "description": "ESX host hardware type; this is actually duplicate to HARDWARE MODEL field of the underlying HW box. However, being Virtual, it might be required for OS too."
+        },
+        "num_processor_cores_associated_to_lpar": {
+          "type": "integer",
+          "description": "Flag to indicate If HA [High Availability] is enabled on virtual cluster"
+        },
+        "operating_system_installation_date": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date on which OS was installed on the box/system"
+        },
+        "number_of_threads_associated_to_operating_system": {
+          "type": "number",
+          "description": "Number of Processor Process Threads associated/allocated to the OS instance"
+        },
+        "number_of_chips_associated_to_operating_system": {
+          "type": "number",
+          "description": "Number of Processor Chips associated/allocated to the OS instance"
+        },
+        "number_of_cores_associated_to_operating_system": {
+          "type": "number",
+          "description": "Number of Cores associated/allocated to the OS instance"
+        },
+        "is_vm_can_migrate": {
+          "type": "string",
+          "description": "Flag to indicate If VM [Virtual Machine] migration allowed",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        "is_vm_auto_motion": {
+          "type": "string",
+          "description": "Flag to indicate if auto VM motion (movement) is allowed on this VM",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        "virtual_machine_power_state ": {
+          "type": "string",
+          "description": "state of Virtual machine. If powered OFF or ON",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        "virtual_machine_secondary_name": {
+          "type": "string",
+          "description": "Hostname of Virtual machine (Guest)"
+        },
+        "virtual_machine_status": {
+          "type": "string",
+          "description": "State of Virtual machine"
+        },
+        "virtual_machine_number_of_processor_chips ": {
+          "type": "number",
+          "description": "Processor Chip assigned to the Virtual Machine"
+        },
+        "host_system_status": {
+          "type": "string",
+          "description": "Flag indicating ESX host status connectivity.Only applies to VMWare - important for Asset management.",
+          "enum": [
+            "Connected",
+            "Not Connected"
+          ]
+        },
+        "host_system_hardware_model": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "ESX host hardware type; this is actually duplicate to HARDWARE MODEL field of the underlying HW box. However, being Virtual, it might be required for OS too."
+        },
+        "number_of_host_system_processor_chip_sockets": {
+          "type": "number",
+          "description": "ESX host chip number of Sockets; how many sockets exist to place the processor on the montherboard "
+        },
+        "vcenter_server_name": {
+          "type": "string",
+          "description": "Hostname of Vcenter server; reference (schema), https://docs.vmware.com/en/VMware-vSphere/index.html "
+        },
+        "is_cluster_ha_enabled": {
+          "type": "string",
+          "description": "Flag to indicate If HA [High Availability] is enabled on virtual cluster",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        "is_cluster_drs_enabled": {
+          "type": "string",
+          "description": "Flag to indicated if DRS [Disaster Recovery Service] is enabled on virtual cluster",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        "cluster_drs_auto_level": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Type of DRS enabled on the Cluster; Value populated from Ansible as-is by HWSW"
+        },
+        "esx_hostname": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Hostname of ESX host or hostname of the underlying/hosting/supervising (ESX) OS"
+        },
+        "esw_operating_system_type": {
+          "type": "string",
+          "description": "Operating system of ESX host"
+        },
+        "esw_operating_system_version": {
+          "type": "string",
+          "description": "Operating system version on ESX host"
+        }
+      },
+      "required": [
+        "host_system_status",
+        "is_virtual",
+        "num_processor_cores_associated_to_hostname",
+        "is_capped_lpar"
+      ]
+    },
+    "contacts-responsibilities-roles": {
+      "type": "object",
+      "properties": {
+        "poc-owner": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Roles that are relevant to the Asset / Inventory Item, e. g. delivery_project_executive, operator, primary_support, security_manager, first_line_manager, owner"
+        },
+        "poc-owneremail": {
+          "type": "string",
+          "format": "email",
+          "description": "in some way referring to the person in that role (e. g., person_id)"
+        }
+      },
+      "securityowner": {
+        "type": "string",
+        "maxLength": 255,
+        "description": "Roles that are relevant to the Asset / Inventory Item, e. g. delivery_project_executive, operator, primary_support, security_manager, first_line_manager, owner"
+      },
+      "securityowneremail": {
+        "type": "string",
+        "format": "email",
+        "description": "in some way referring to the person in that role (e. g., person_id)"
+      }
+    },
+    "compliance_and_security": {
+      "$comment": "suggestion",
+      "type": "object",
+      "properties": {
+        "is_internet_facing": {
+          "$comment": "internet_facing_hw",
+          "type": "boolean",
+          "description": "Flag to indicate if the OS is accessible from internet (might need additional security packages to be installed for Internet facing Items)",
+          "format": "internetFacingFlag"
+        },
+        "end_of_support_date": {
+          "$comment": "os_eos_date",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Date of End of Support for OS / Software component - typically, this is provided by the OS / Software Manufacturer"
+        },
+        "is_end_point_detection_and_response_required": {
+          "type": "boolean",
+          "$comment": "erd",
+          "description": "Flag to indicate if the Item is required to be tracked in an EDR [Endpoint Detection and Response] tool",
+          "format": "end_point_detection_and_response_required_flag"
+        }
+      },
+      "required": [
+        "is_internet_facing",
+        "end_of_support_date",
+        "is_end_point_detection_and_response_required"
+      ]
+    },
+    "identifier": {
+      "description": "The IP address v4 used by Hardware or Software items",
+      "type": "object",
+      "$comment": "WIP: IP address integration test",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "hostname_alias": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "fully_qualified_host_name": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "uuid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parent_uuid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ip_address": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "ipv5"
+            },
+            {
+              "type": "string",
+              "format": "ipv6"
+            }
+          ]
+        },
+        "gateway": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "ipv4"
+            },
+            {
+              "type": "string",
+              "format": "ipv6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subnet_mask": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "ipv4"
+            },
+            {
+              "type": "string",
+              "format": "ipv6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_primary_ip_address": {
+          "type": "boolean"
+        },
+        "is_in_security_scope": {
+          "type": "boolean"
+        },
+        "is_dhcp_provided": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uuid",
+        "parent_uuid",
+        "hostname",
+        "ip_address",
+        "is_primary_ip_address",
+        "is_in_security_scope"
+      ],
+      "if": {
+        "properties": {
+          "ip_address": {
+            "format": "ipv4"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "gateway": {
+            "format": "ipv4"
+          },
+          "subnet_mask": {
+            "format": "ipv4"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "gateway": {
+            "format": "ipv6"
+          },
+          "subnet_mask": {
+            "format": "ipv6"
+          }
+        }
+      }
+    },
+    "subsystem": {
+      "description": "the classification within the category (level 2) of the item",
+      "$comment": "suggestion",
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "$ref": "#/$defs/identifier"
+        },
+        "software_type": {
+          "$ref": "#/$defs/software_type"
+        }
+      },
+      "required": [
+        "software_type",
+        "identifier"
+      ]
+    },
+    "identifier": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "$comment": "uuid",
+          "description": "",
+          "format": "uuid"
+        },
+        "parent_uuid": {
+          "type": "string",
+          "$comment": "parent_uuid",
+          "description": "",
+          "format": "uuid"
+        },
+        "subsystem_name": {
+          "type": "string",
+          "$comment": "subsystem name",
+          "description": "Name of the actual instance of subsystem"
+        },
+        "product_provider": {
+          "type": "string",
+          "$comment": "product provider",
+          "description": "Common name of the subsystem software-product provider/manufacturer"
+        },
+        "product_name": {
+          "type": "string",
+          "$comment": "product name",
+          "description": "Common name of the subsystem software product"
+        },
+        "product_version": {
+          "type": "string",
+          "$comment": "product version",
+          "description": "Version of the subsystem software product, as defined by the provider/manufacturer"
+        },
+        "product_release": {
+          "type": "string",
+          "$comment": "product release",
+          "description": "Release of the subsystem software product, as defined by the Provider/Manufacturer."
+        },
+        "product_modification_level": {
+          "type": "string",
+          "$comment": "product modification level",
+          "description": "Modification Level of the Subsystem's software product, as defined by the Provider/Manufacturer."
+        },
+        "product_service_level": {
+          "type": "string",
+          "$comment": "product service level",
+          "description": "Service Level of the Subsystem's software product, as defined by the Provider/Manufacturer."
+        },
+        "product_patch_level": {
+          "type": "string",
+          "$comment": "product patch level",
+          "description": "Patch Level of the Subsystem's software product, as defined by the Provider/Manufacturer."
+        },
+        "product_generic_type": {
+          "type": "string",
+          "$comment": "product generic type",
+          "description": "A type or group of the software product."
+        },
+        "instance_name": {
+          "type": "string",
+          "$comment": "instance name",
+          "description": "Instance name of subsystem"
+        }
+      },
+      "required": [
+        "uuid",
+        "parent_uuid",
+        "subsystem_name",
+        "product_provider",
+        "product_name",
+        "product_version",
+        "product_release",
+        "product_modification_level",
+        "product_service_level",
+        "product_patch_level",
+        "product_generic_type",
+        "instance_name"
+      ]
+    }
+  }
+}
